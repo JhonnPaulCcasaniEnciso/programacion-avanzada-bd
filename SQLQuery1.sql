@@ -76,3 +76,57 @@ insert into Agencia (Agencia)
 values('Los Pinos')
 go
 
+Parte 4: 
+
+USE AdministracionEP01;
+GO
+
+-- ============================================================================
+-- ACTIVIDAD 4: Subconsultas y Contraste de Alternativas
+-- Caso de Uso: Clientes con compras de productos en Stock Crítico (< 15)
+-- ============================================================================
+
+-- ----------------------------------------------------------------------------
+-- OPCIÓN A: Utilizando Subconsulta con IN
+-- Propósito: Obtener el listado de clientes cuyo ClienteID pertenezca al 
+-- conjunto de IDs obtenido mediante una subconsulta que filtra productos con poco stock.
+-- ----------------------------------------------------------------------------
+SELECT 
+    c.ClienteID,
+    c.DNI,
+    c.NombreCompleto,
+    c.Telefono
+FROM 
+    Clientes c
+WHERE 
+    c.ClienteID IN (
+        SELECT v.ClienteID
+        FROM Ventas v
+        INNER JOIN DetalleVentas dv ON v.VentaID = dv.VentaID
+        INNER JOIN Productos p ON dv.ProductoID = p.ProductoID
+        WHERE p.Stock < 15
+    );
+GO
+
+-- ----------------------------------------------------------------------------
+-- OPCIÓN B: Utilizando Subconsulta Correlacionada con EXISTS
+-- Propósito: Obtener el mismo listado evaluando la existencia de al menos
+-- una venta ligada al cliente que contenga un producto con stock crítico.
+-- ----------------------------------------------------------------------------
+SELECT 
+    c.ClienteID,
+    c.DNI,
+    c.NombreCompleto,
+    c.Telefono
+FROM 
+    Clientes c
+WHERE 
+    EXISTS (
+        SELECT 1
+        FROM Ventas v
+        INNER JOIN DetalleVentas dv ON v.VentaID = dv.VentaID
+        INNER JOIN Productos p ON dv.ProductoID = p.ProductoID
+        WHERE v.ClienteID = c.ClienteID
+          AND p.Stock < 15
+    );
+GO
